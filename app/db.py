@@ -1,12 +1,21 @@
 from __future__ import annotations
 
-from sqlalchemy import create_engine
+from functools import lru_cache
+
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.config import get_settings
+
+@lru_cache(maxsize=None)
+def get_engine(database_url: str) -> Engine:
+    return create_engine(database_url, future=True)
 
 
-settings = get_settings()
-
-engine = create_engine(settings.database_url, future=True)
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
+@lru_cache(maxsize=None)
+def get_session_factory(database_url: str) -> sessionmaker:
+    return sessionmaker(
+        bind=get_engine(database_url),
+        autoflush=False,
+        autocommit=False,
+        future=True,
+    )
